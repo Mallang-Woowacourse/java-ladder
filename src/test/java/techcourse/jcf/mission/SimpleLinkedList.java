@@ -17,7 +17,7 @@ public class SimpleLinkedList implements SimpleList {
     @Override
     public void add(int index, final String value) {
         validateAddIndex(index);
-        if (isEmpty()) {
+        if (isEmpty() || index == 0) {
             addFirst(value);
             return;
         }
@@ -31,8 +31,13 @@ public class SimpleLinkedList implements SimpleList {
 
     private boolean addFirst(final String value) {
         size++;
-        head = Node.first(value);
-        tail = head;
+        if (size == 1) {
+            head = Node.first(value, head);
+            tail = head;
+            return true;
+        }
+        head.prev = Node.first(value, head);
+        head = head.prev;
         return true;
     }
 
@@ -148,7 +153,7 @@ public class SimpleLinkedList implements SimpleList {
 
     private String removeFirst() {
         size--;
-        if (size == 1) {
+        if (size == 0) {
             String removed = head.element;
             head = null;
             tail = null;
@@ -194,8 +199,8 @@ public class SimpleLinkedList implements SimpleList {
             this.prev = prev;
         }
 
-        static Node first(final String element) {
-            return new Node(null, element, null);
+        static Node first(final String element, final Node next) {
+            return new Node(null, element, next);
         }
 
         static Node last(final Node prev, final String element) {

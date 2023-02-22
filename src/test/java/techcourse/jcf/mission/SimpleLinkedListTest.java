@@ -5,6 +5,8 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -13,11 +15,15 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 public class SimpleLinkedListTest {
 
-    // given
+    private final SimpleList emptyList = new SimpleLinkedList();
+    private final SimpleList size1List = new SimpleLinkedList();
     private final SimpleList list = new SimpleLinkedList();
+    private final List<SimpleList> lists = List.of(emptyList, size1List, list);
 
     @BeforeEach
     void init() {
+        size1List.add("0");
+        list.add("0");
         list.add("1");
         list.add("2");
         list.add("3");
@@ -30,135 +36,144 @@ public class SimpleLinkedListTest {
         // given
         String value = "add";
 
-        // when
-        boolean result = list.add(value);
+        lists.forEach(it -> {
+            // when
+            boolean result = it.add(value);
 
-        // then
-        assertAll(
-                () -> assertThat(result).isTrue(),
-                () -> assertThat(list.contains(value)).isTrue()
-        );
+            // then
+            assertAll(
+                    () -> assertThat(result).isTrue(),
+                    () -> assertThat(it.contains(value)).isTrue(),
+                    () -> assertThat(it.indexOf(value)).isEqualTo(it.size() - 1),
+                    () -> assertThat(it.get(it.indexOf(value))).isEqualTo(value)
+            );
+        });
     }
 
     @Test
     void add_시_추가할_위치를_정해주면_이후_존재하는_값들은_뒤로_밀린다() {
-        // given
-
         // when
-        list.add(2, "add1");
-        list.add(6, "add2");
+        emptyList.add(0, "1");
+        emptyList.add(0, "0");
+        emptyList.add(2, "2");
+        list.add(2, "added 2");
+        list.add(6, "added 6");
 
         // then
         assertAll(
-                () -> assertThat(list.size()).isEqualTo(7),
-                () -> assertThat(list.get(0)).isEqualTo("1"),
-                () -> assertThat(list.get(1)).isEqualTo("2"),
-                () -> assertThat(list.get(2)).isEqualTo("add1"),
-                () -> assertThat(list.get(3)).isEqualTo("3"),
-                () -> assertThat(list.get(4)).isEqualTo("4"),
-                () -> assertThat(list.get(5)).isEqualTo("5"),
-                () -> assertThat(list.get(6)).isEqualTo("add2")
+                () -> assertThat(emptyList.get(0)).isEqualTo("0"),
+                () -> assertThat(emptyList.get(1)).isEqualTo("1"),
+                () -> assertThat(list.get(0)).isEqualTo("0"),
+                () -> assertThat(list.get(1)).isEqualTo("1"),
+                () -> assertThat(list.get(2)).isEqualTo("added 2"),
+                () -> assertThat(list.get(3)).isEqualTo("2"),
+                () -> assertThat(list.get(4)).isEqualTo("3"),
+                () -> assertThat(list.get(5)).isEqualTo("4"),
+                () -> assertThat(list.get(6)).isEqualTo("added 6"),
+                () -> assertThat(list.get(7)).isEqualTo("5")
         );
     }
 
     @Test
     void size_시_현재_들어있는_값의_개수를_구한다() {
-        SimpleList list = new SimpleLinkedList();
-        list.add("add");
-        assertThat(list.size()).isEqualTo(1);
+        assertAll(
+                () -> assertThat(emptyList.size()).isEqualTo(0),
+                () -> assertThat(list.size()).isEqualTo(6),
+                () -> assertThat(size1List.size()).isEqualTo(1)
+        );
     }
 
     @Test
     void set_시_값을_세팅한다() {
         // given
-        SimpleList list = new SimpleLinkedList();
-        list.add(0, "temp0");
-        list.add(1, "temp1");
-        list.add(2, "temp2");
-        list.add(3, "temp3");
+        int beforeListSize = list.size();
 
         // when
-        list.set(0, "set0");
-        list.set(1, "set1");
-        list.set(2, "set2");
-        list.set(3, "set3");
+        size1List.set(0, "set 0");
+        list.set(0, "set 0");
+        list.set(3, "set 3");
+        list.set(5, "set 5");
 
         // then
         assertAll(
-                () -> assertThat(list.get(0)).isEqualTo("set0"),
-                () -> assertThat(list.get(1)).isEqualTo("set1"),
-                () -> assertThat(list.get(2)).isEqualTo("set2"),
-                () -> assertThat(list.get(3)).isEqualTo("set3")
+                () -> assertThat(size1List.get(0)).isEqualTo("set 0"),
+                () -> assertThat(list.get(0)).isEqualTo("set 0"),
+                () -> assertThat(list.get(3)).isEqualTo("set 3"),
+                () -> assertThat(list.get(5)).isEqualTo("set 5"),
+                () -> assertThat(list.size()).isEqualTo(beforeListSize),
+                () -> assertThat(size1List.size()).isEqualTo(1)
         );
     }
 
     @Test
     void contains() {
-        // given
-        SimpleList list = new SimpleLinkedList();
-        list.add(0, "temp0");
-        list.add(1, "temp1");
-        list.add(2, "temp2");
-        list.add(3, "temp3");
-
-        // when
-        boolean temp0 = list.contains("temp0");
-        boolean temp3 = list.contains("temp3");
-        boolean temp012321 = list.contains("temp012321");
-
-        // then
+        // when & then
         assertAll(
-                () -> assertThat(temp0).isTrue(),
-                () -> assertThat(temp3).isTrue(),
-                () -> assertThat(temp012321).isFalse()
+                () -> assertThat(emptyList.contains("0")).isFalse(),
+                () -> assertThat(size1List.contains("0")).isTrue(),
+                () -> assertThat(size1List.contains("1")).isFalse(),
+                () -> assertThat(list.contains("0")).isTrue(),
+                () -> assertThat(list.contains("1")).isTrue(),
+                () -> assertThat(list.contains("2")).isTrue(),
+                () -> assertThat(list.contains("3")).isTrue(),
+                () -> assertThat(list.contains("4")).isTrue(),
+                () -> assertThat(list.contains("5")).isTrue(),
+                () -> assertThat(list.contains("6")).isFalse()
         );
     }
 
     @Test
     void isEmpty() {
-        SimpleList list = new SimpleLinkedList();
-        assertThat(list.isEmpty()).isTrue();
-        assertThat(list.add("11")).isTrue();
-        assertThat(list.isEmpty()).isFalse();
+        assertAll(
+                () -> assertThat(emptyList.isEmpty()).isTrue(),
+                () -> assertThat(size1List.isEmpty()).isFalse(),
+                () -> assertThat(list.isEmpty()).isFalse()
+        );
+
+        size1List.remove(0);
         list.remove(0);
-        assertThat(list.isEmpty()).isTrue();
+        list.remove(0);
+        assertAll(
+                () -> assertThat(size1List.isEmpty()).isTrue(),
+                () -> assertThat(list.isEmpty()).isFalse()
+        );
     }
 
     @Test
     void remove1() {
-        SimpleList list = new SimpleLinkedList();
-        list.add("1");
-        list.add("2");
-        list.add("3");
-        list.add("4");
+        assertThat(size1List.remove(0)).isEqualTo("0");
+        assertThat(size1List.isEmpty()).isTrue();
+        size1List.add("0");
+        size1List.add("1");
+        assertThat(size1List.get(0)).isEqualTo("0");
+        assertThat(size1List.get(1)).isEqualTo("1");
+        size1List.add(2, "2");
+        assertThat(size1List.get(2)).isEqualTo("2");
+
+        assertThat(list.remove(list.size() - 1)).isEqualTo("5");
         list.add("5");
         list.add("6");
-        String remove = list.remove(list.size() - 1); // 6
-        String remove1 = list.remove(0); // 1
-        String remove2 = list.remove(2); // 4
-        assertThat(list.size()).isEqualTo(3);
-        assertThat(list.contains("1")).isFalse();
-        assertThat(list.contains("2")).isTrue();
-        assertThat(list.contains("3")).isTrue();
-        assertThat(list.contains("4")).isFalse();
-        assertThat(list.contains("5")).isTrue();
-        assertThat(list.contains("6")).isFalse();
+        assertThat(list.get(list.size() - 1)).isEqualTo("6");
+        assertThat(list.get(list.size() - 2)).isEqualTo("5");
     }
 
     @Test
     void remove2() {
-        SimpleList list = new SimpleLinkedList();
-        list.add("1");
-        list.remove("1");
-        list.add("1");
-        list.add("2");
-        list.add("3");
-        list.remove("1");
-        list.remove("3");
-        assertThat(list.size()).isEqualTo(1);
-        assertThat(list.get(0)).isEqualTo("2");
-        boolean remove = list.remove("4");
-        assertThat(remove).isFalse();
+        assertThat(size1List.remove("0")).isTrue();
+        assertThat(size1List.isEmpty()).isTrue();
+        size1List.add("0");
+        size1List.add("1");
+        assertThat(size1List.get(0)).isEqualTo("0");
+        assertThat(size1List.get(1)).isEqualTo("1");
+        size1List.add(2, "2");
+        assertThat(size1List.get(2)).isEqualTo("2");
+
+        assertThat(list.remove("5")).isTrue();
+        assertThat(list.contains("5")).isFalse();
+        list.add("5");
+        list.add("6");
+        assertThat(list.get(list.size() - 1)).isEqualTo("6");
+        assertThat(list.get(list.size() - 2)).isEqualTo("5");
     }
 
     @Test
@@ -175,18 +190,15 @@ public class SimpleLinkedListTest {
 
     @Test
     void indexOut() {
-        // given
-        SimpleList list = new SimpleLinkedList();
-
         // when & then
         assertAll(
-                () -> assertThatThrownBy(() -> list.add(1, "12"))
+                () -> assertThatThrownBy(() -> emptyList.add(1, "12"))
                         .isInstanceOf(IndexOutOfBoundsException.class),
-                () -> assertThatThrownBy(() -> list.get(0))
+                () -> assertThatThrownBy(() -> emptyList.get(0))
                         .isInstanceOf(IndexOutOfBoundsException.class),
-                () -> assertThatThrownBy(() -> list.set(0, "a"))
+                () -> assertThatThrownBy(() -> emptyList.set(0, "a"))
                         .isInstanceOf(IndexOutOfBoundsException.class),
-                () -> assertThatThrownBy(() -> list.remove(0))
+                () -> assertThatThrownBy(() -> emptyList.remove(0))
                         .isInstanceOf(IndexOutOfBoundsException.class)
         );
     }
